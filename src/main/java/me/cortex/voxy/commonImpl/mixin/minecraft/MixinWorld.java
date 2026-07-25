@@ -20,7 +20,7 @@ public class MixinWorld implements IWorldGetIdentifier {
     private WorldIdentifier identifier;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void voxy$injectIdentifier(WritableLevelData properties,
+    private void voxy$injectResourceLocation(WritableLevelData properties,
                                        ResourceKey<Level> key,
                                        RegistryAccess registryManager,
                                        Holder<DimensionType> dimensionEntry,
@@ -37,7 +37,7 @@ public class MixinWorld implements IWorldGetIdentifier {
     }
 
     @Override
-    public WorldIdentifier voxy$getIdentifier() {
+    public WorldIdentifier voxy$getResourceLocation() {
         return this.identifier;
     }
 }

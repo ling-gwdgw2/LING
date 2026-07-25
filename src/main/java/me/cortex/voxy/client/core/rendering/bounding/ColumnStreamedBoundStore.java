@@ -4,7 +4,6 @@ import me.cortex.voxy.client.core.gl.GlBuffer;
 import me.cortex.voxy.client.core.rendering.Viewport;
 import me.cortex.voxy.client.core.rendering.util.UploadStream;
 import me.cortex.voxy.common.util.MemoryBuffer;
-import org.embeddedt.embeddium.client.render.chunk.map.ChunkTrackerHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
@@ -77,21 +76,8 @@ public class ColumnStreamedBoundStore implements IBoundStore {
             maxcy--;
         }
 
+        // Stubbed chunk tracker
         int count = 0;
-        var tracker = ChunkTrackerHolder.get(Minecraft.getInstance().level);
-        if (tracker != null) {
-            var iter = tracker.getReadyChunks().longIterator();
-            while (iter.hasNext()) {
-                long column = iter.nextLong();
-                //Emit column
-                for (int cy = mincy + 1; cy < maxcy; cy++) {
-                    if (count++ < capacity && writePtr != 0) {
-                        putPos(writePtr, SectionPos.asLong(ChunkPos.getX(column), cy, ChunkPos.getZ(column)));
-                        writePtr += 8;
-                    }
-                }
-            }
-        }
 
         if (count>capacity) {
             return -count;

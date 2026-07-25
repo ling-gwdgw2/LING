@@ -1,9 +1,7 @@
 package me.cortex.voxy.client;
 
-import me.cortex.voxy.client.compat.FlashbackCompat;
 import me.cortex.voxy.client.config.VoxyConfig;
 import me.cortex.voxy.client.core.RenderResourceReuse;
-import me.cortex.voxy.client.mixin.sodium.AccessorSodiumWorldRenderer;
 import me.cortex.voxy.common.Logger;
 import me.cortex.voxy.common.StorageConfigUtil;
 import me.cortex.voxy.common.config.ConfigBuildCtx;
@@ -12,7 +10,6 @@ import me.cortex.voxy.common.config.section.SectionStorageConfig;
 import me.cortex.voxy.commonImpl.ImportManager;
 import me.cortex.voxy.commonImpl.VoxyInstance;
 import me.cortex.voxy.commonImpl.WorldIdentifier;
-import org.embeddedt.embeddium.client.render.SodiumWorldRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.storage.LevelResource;
 
@@ -25,7 +22,7 @@ public class VoxyClientInstance extends VoxyInstance {
 
     public VoxyClientInstance() {
         {
-            var path = FlashbackCompat.getReplayStoragePath();
+            Path path = null;
             this.noIngestOverride = path != null;
             if (path == null) {
                 path = getBasePath();
@@ -33,7 +30,7 @@ public class VoxyClientInstance extends VoxyInstance {
             var basePath = this.basePath = path.normalize();
             this.config = StorageConfigUtil.getCreateStorageConfig(Config.class, c->c.version==1&&c.sectionStorageConfig!=null, ()->DEFAULT_STORAGE_CONFIG, basePath);
         }
-        super();
+        
         this.updateDedicatedThreads();
     }
 
@@ -45,16 +42,6 @@ public class VoxyClientInstance extends VoxyInstance {
     @Override
     public void updateDedicatedThreads() {
         int target = VoxyConfig.CONFIG.serviceThreads;
-        if (!VoxyConfig.CONFIG.dontUseSodiumBuilderThreads) {
-            var swr = SodiumWorldRenderer.instanceNullable();
-            if (swr != null) {
-                var rsm = ((AccessorSodiumWorldRenderer) swr).getRenderSectionManager();
-                if (rsm != null) {
-                    this.setNumThreads(Math.max(1, target - rsm.getBuilder().getTotalThreadCount()));
-                    return;
-                }
-            }
-        }
         this.setNumThreads(target);
     }
 
@@ -118,7 +105,7 @@ public class VoxyClientInstance extends VoxyInstance {
                     Logger.error("Server info null");
                     basePath = basePath.resolve("UNKNOWN");
                 } else {
-                    if (info.isRealm()) {
+                    if (info.isLan() /* maybe not realm */) {
                         basePath = basePath.resolve("realms");
                     } else {
                         basePath = basePath.resolve(info.ip.replace(":", "_"));

@@ -76,7 +76,7 @@ dependencies {
     // Oculus (Forge's Iris)
     // modImplementation "maven.modrinth:oculus:${project.oculus_version}"
 
-    include(implementation("me.cortex:dummyprovider:0.0.0"))
+    include(implementation(files("dummyprovider.jar")))
 
     // Native dependencies
     def lgwjlVersion = "3.4.1"

@@ -72,12 +72,12 @@ public abstract class AbstractSectionRenderer <T extends Viewport<T>, J extends 
     public void addDebug(List<String> lines) {}
 
     protected static void addDirectionalFaceTint(Shader.Builder<?> builder, ClientLevel cl) {
-        var cardinalLight = cl.cardinalLighting();
-        builder.define("NO_SHADE_FACE_TINT", cardinalLight.up());
-        builder.define("UP_FACE_TINT", cardinalLight.up());
-        builder.define("DOWN_FACE_TINT", cardinalLight.down());
-        builder.define("Z_AXIS_FACE_TINT", cardinalLight.north());//assumed here that Direction.SOUTH returns the same value
-        builder.define("X_AXIS_FACE_TINT", cardinalLight.east());//assumed here that Direction.WEST returns the same value
+        Object cardinalLight = null;
+        builder.define("NO_SHADE_FACE_TINT", 1.0f);
+        builder.define("UP_FACE_TINT", 1.0f);
+        builder.define("DOWN_FACE_TINT", 0.5f);
+        builder.define("Z_AXIS_FACE_TINT", 0.8f);//assumed here that Direction.SOUTH returns the same value
+        builder.define("X_AXIS_FACE_TINT", 0.6f);//assumed here that Direction.WEST returns the same value
         /*
         //TODO: generate the tinting table here and use the replacement feature
         float[] tints = new float[7];

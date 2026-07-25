@@ -409,8 +409,8 @@ public class TestNodeManager {
             }
             return true;
         } catch (Exception e) {
-            var trace = new ArrayList<>(List.of(e.getStackTrace()));
-            while (!trace.getLast().getMethodName().equals("runTest")) trace.removeLast();//Very hacky budget filter
+            var trace = new ArrayList<>(java.util.Arrays.asList(e.getStackTrace()));
+            while (!trace.get(trace.size() - 1).getMethodName().equals("runTest")) trace.remove(trace.size() - 1);//Very hacky budget filter
             synchronized (traces) {
                 if (traces.add(trace)) {
                     e.printStackTrace();

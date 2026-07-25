@@ -22,7 +22,7 @@ import java.util.Objects;
 
 @Mixin(LevelRenderer.class)
 public abstract class MixinLevelRenderer implements IVoxyRenderSystemHolder {
-    @Unique @Nullable private WorldIdentifier identifier;
+    @Unique @Nullable private WorldResourceLocation identifier;
     @Unique private @Nullable VoxyRenderSystem renderer;
 
     @Override
@@ -52,7 +52,7 @@ public abstract class MixinLevelRenderer implements IVoxyRenderSystemHolder {
 
     @Override
     public void voxy$setWorld(Level level) {
-        WorldIdentifier identifier = level==null?null:WorldIdentifier.of(level);
+        WorldResourceLocation identifier = level==null?null:WorldResourceLocation.of(level);
         if (Objects.equals(this.identifier, identifier)) return;
         this.voxy$shutdownRenderer();
         this.identifier = identifier;

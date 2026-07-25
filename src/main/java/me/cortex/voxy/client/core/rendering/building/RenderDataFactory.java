@@ -14,9 +14,16 @@ import me.cortex.voxy.commonImpl.VoxyCommon;
 import org.lwjgl.system.MemoryUtil;
 
 import java.util.Arrays;
-
-
 public class RenderDataFactory {
+    private static long expand5(long v) {
+        long out = 0;
+        for (int i = 0; i < 11; i++) {
+            if ((v & (1L << i)) != 0) {
+                out |= (1L << (i * 5));
+            }
+        }
+        return out;
+    }
     private static final boolean BUILD_OCCUPANCY_SET = false;
 
     private static final boolean CHECK_NEIGHBOR_FACE_OCCLUSION = true;
@@ -335,7 +342,7 @@ public class RenderDataFactory {
             //Note this is not thread safe! (but eh, fk it)
             var raw = sec._unsafeGetRawDataArray();
             for (int i = 0; i < 32*32; i++) {
-                this.neighboringFaces[i+32*32*4] = raw[Integer.expand(i,0b11111_00000_11111)|(0x1F<<5)];//pull the +z faces from the section
+                this.neighboringFaces[i+32*32*4] = raw[((i & 0x1F) | ((i >> 5) & 0x1F) << 10)|(0x1F<<5)];//pull the +z faces from the section
             }
             sec.release(WorldSection.RELEASE_HINT_POSSIBLE_REUSE);
         }
@@ -344,7 +351,7 @@ public class RenderDataFactory {
             //Note this is not thread safe! (but eh, fk it)
             var raw = sec._unsafeGetRawDataArray();
             for (int i = 0; i < 32*32; i++) {
-                this.neighboringFaces[i+32*32*5] = raw[Integer.expand(i,0b11111_00000_11111)];//pull the -z faces from the section
+                this.neighboringFaces[i+32*32*5] = raw[((i & 0x1F) | ((i >> 5) & 0x1F) << 10)];//pull the -z faces from the section
             }
             sec.release(WorldSection.RELEASE_HINT_POSSIBLE_REUSE);
         }
@@ -929,9 +936,9 @@ public class RenderDataFactory {
                         this.xAxisMeshers[index].skip(31);
                     }
                     //Clear the sum
-                    sumA &= ~(Long.expand(Integer.toUnsignedLong(partialHasCount), X_I_MSK)*0x1F);
-                    sumB &= ~(Long.expand(Integer.toUnsignedLong(partialHasCount)>>11, X_I_MSK)*0x1F);
-                    sumC &= ~(Long.expand(Integer.toUnsignedLong(partialHasCount)>>22, X_I_MSK)*0x1F);
+                    sumA &= ~(expand5(partialHasCount & 0x7FF)*0x1F);
+                    sumB &= ~(expand5((partialHasCount >> 11) & 0x7FF)*0x1F);
+                    sumC &= ~(expand5((partialHasCount >> 22) & 0x7FF)*0x1F);
                 }
 
                 if (msk == 0) {
@@ -942,9 +949,9 @@ public class RenderDataFactory {
                 {//Dont need this as can just increment everything then -1 in mask
                     //Compute and increment skips for indexes
                     long imsk = Integer.toUnsignedLong(~msk);// we only want to increment where there isnt a face
-                    sumA += Long.expand(imsk, X_I_MSK);
-                    sumB += Long.expand(imsk>>11, X_I_MSK);
-                    sumC += Long.expand(imsk>>22, X_I_MSK);
+                    sumA += expand5(imsk & 0x7FF);
+                    sumB += expand5((imsk >> 11) & 0x7FF);
+                    sumC += expand5((imsk >> 22) & 0x7FF);
                 }*/
 
                 int faceForwardMsk = msk&lMsk;
@@ -1146,9 +1153,9 @@ public class RenderDataFactory {
                         this.xAxisMeshers[index].skip(31);
                     }
                     //Clear the sum
-                    sumA &= ~(Long.expand(Integer.toUnsignedLong(partialHasCount), X_I_MSK)*0x1F);
-                    sumB &= ~(Long.expand(Integer.toUnsignedLong(partialHasCount)>>11, X_I_MSK)*0x1F);
-                    sumC &= ~(Long.expand(Integer.toUnsignedLong(partialHasCount)>>22, X_I_MSK)*0x1F);
+                    sumA &= ~(expand5(partialHasCount & 0x7FF)*0x1F);
+                    sumB &= ~(expand5((partialHasCount >> 11) & 0x7FF)*0x1F);
+                    sumC &= ~(expand5((partialHasCount >> 22) & 0x7FF)*0x1F);
                 }
 
                 if (msk == 0) {
@@ -1438,9 +1445,9 @@ public class RenderDataFactory {
                         this.secondaryXAxisMeshers[index].skip(31);
                     }
                     //Clear the sum
-                    sumA &= ~(Long.expand(Integer.toUnsignedLong(partialHasCount), X_I_MSK)*0x1F);
-                    sumB &= ~(Long.expand(Integer.toUnsignedLong(partialHasCount)>>11, X_I_MSK)*0x1F);
-                    sumC &= ~(Long.expand(Integer.toUnsignedLong(partialHasCount)>>22, X_I_MSK)*0x1F);
+                    sumA &= ~(expand5(partialHasCount & 0x7FF)*0x1F);
+                    sumB &= ~(expand5((partialHasCount >> 11) & 0x7FF)*0x1F);
+                    sumC &= ~(expand5((partialHasCount >> 22) & 0x7FF)*0x1F);
                 }
 
                 if (msk == 0) {

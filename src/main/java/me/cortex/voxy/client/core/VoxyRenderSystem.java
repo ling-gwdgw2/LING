@@ -1,7 +1,8 @@
 package me.cortex.voxy.client.core;
 
-import com.mojang.blaze3d.opengl.GlConst;
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
+import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL13C;
 import me.cortex.voxy.client.TimingStatistics;
 import me.cortex.voxy.client.VoxyClient;
 import me.cortex.voxy.client.config.VoxyConfig;
@@ -27,18 +28,17 @@ import me.cortex.voxy.client.core.rendering.util.DownloadStream;
 import me.cortex.voxy.client.core.rendering.util.PrintfDebugUtil;
 import me.cortex.voxy.client.core.rendering.util.UploadStream;
 import me.cortex.voxy.client.core.util.GPUTiming;
-import me.cortex.voxy.client.core.util.IrisUtil;
 import me.cortex.voxy.common.Logger;
 import me.cortex.voxy.common.thread.ServiceManager;
 import me.cortex.voxy.common.world.WorldEngine;
 import me.cortex.voxy.commonImpl.VoxyCommon;
-import org.embeddedt.embeddium.client.util.FogParameters;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13C;
 
 import java.util.Arrays;
 import java.util.List;
@@ -88,7 +88,7 @@ public class VoxyRenderSystem {
         if (Minecraft.getInstance().options.renderDistance().get()<3) {
             String msg = "Voxy: Having a vanilla render distance of 2 can cause rare culling near the edge of your screen issues, please use 3 or more";
             Logger.warn(msg);
-            Minecraft.getInstance().gui.chatListener().handleSystemMessage(Component.literal(msg), false);
+            Minecraft.getInstance().gui.getChat().addMessage(Component.literal(msg));
         }
 
         //Fking HATE EVERYTHING AAAAAAAAAAAAAAAA
@@ -136,8 +136,8 @@ public class VoxyRenderSystem {
             this.viewportSelector = new ViewportSelector<>(sectionRenderer::createViewport);
 
             {
-                int minSec = Minecraft.getInstance().level.getMinSectionY() >> 5;
-                int maxSec = (Minecraft.getInstance().level.getMaxSectionY() - 1) >> 5;
+                int minSec = Minecraft.getInstance().level.getMinBuildHeight() >> 9;
+                int maxSec = (Minecraft.getInstance().level.getMaxBuildHeight() - 1) >> 9;
 
                 //Do some very cheeky stuff for MiB
                 if (VoxyCommon.IS_MINE_IN_ABYSS) {//TODO: make this somehow configurable
@@ -167,14 +167,14 @@ public class VoxyRenderSystem {
         }
 
         for (int i = 0; i < 12; i++) {
-            GlStateManager._activeTexture(GlConst.GL_TEXTURE0+i);
+            GlStateManager._activeTexture(GL13C.GL_TEXTURE0+i);
             GlStateManager._bindTexture(0);
             glBindSampler(i, 0);
         }
     }
 
 
-    public Viewport<?> setupViewport(Matrix4fc vanillaProjection, Matrix4fc modelView, FogParameters fogParameters, int width, int height, double cameraX, double cameraY, double cameraZ) {
+    public Viewport<?> setupViewport(Matrix4fc vanillaProjection, Matrix4fc modelView, Object fogParameters, int width, int height, double cameraX, double cameraY, double cameraZ) {
         var viewport = this.getViewport();
         if (viewport == null) {
             return null;
@@ -274,7 +274,7 @@ public class VoxyRenderSystem {
         this.pipeline.preSetup(viewport);
 
         TimingStatistics.E.start();
-        if ((!VoxyClient.disableSodiumChunkRender())&&!IrisUtil.irisShadowActive()) {
+        if (!VoxyClient.disableSodiumChunkRender()) {
             if (VoxyClient.isFrexActive()!=(this.columnStreamedBoundStore!=null)) {
                 if (this.columnStreamedBoundStore == null) {
                     this.columnStreamedBoundStore = new ColumnStreamedBoundStore();
@@ -324,7 +324,7 @@ public class VoxyRenderSystem {
 
         GPUTiming.INSTANCE.tick();
 
-        glBindFramebuffer(GlConst.GL_FRAMEBUFFER, oldFB);
+        glBindFramebuffer(GL30C.GL_FRAMEBUFFER, oldFB);
         glViewport(dims[0], dims[1], dims[2], dims[3]);
 
         {//Reset state manager stuffs
@@ -337,25 +337,20 @@ public class VoxyRenderSystem {
             GlStateManager._glBindVertexArray(0);//Clear binding
             glBindVertexArray(0);
 
-            GlStateManager._activeTexture(GlConst.GL_TEXTURE1);
+            GlStateManager._activeTexture(GL13C.GL_TEXTURE1);
             for (int i = 0; i < 12; i++) {
-                GlStateManager._activeTexture(GlConst.GL_TEXTURE0+i);
+                GlStateManager._activeTexture(GL13C.GL_TEXTURE0+i);
                 GlStateManager._bindTexture(0);
                 glBindSampler(i, 0);
             }
-
-            IrisUtil.clearIrisSamplers();//Thanks iris (sigh)
 
             //TODO: should/needto actually restore all of these, not just clear them
             //Clear all the bindings
             for (int i = 0; i < oldBufferBindings.length; i++) {
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, i, oldBufferBindings[i]);
             }
-            GlStateManager._blendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
             glBlendEquation(GL_FUNC_ADD);
-            GlStateManager._blendFuncSeparate(0,0, 0, 0);
             glBlendFunc(0, 0);
-            GlStateManager._disableBlend(0);
             glDisable(GL_BLEND);
             GlStateManager._depthFunc(GL_LESS);
             glDepthFunc(GL_LESS);
@@ -452,35 +447,7 @@ public class VoxyRenderSystem {
     }*/
 
     private static Matrix4f computeProjectionMat(RenderProperties properties, Matrix4fc base) {
-
-        //this jank is to capture the extra crap they inject like viewbobbing
-        var rawMCProj = Minecraft.getInstance().gameRenderer.gameRenderState().levelRenderState.cameraRenderState.projectionMatrix;
-        var extraProjection = rawMCProj.invert(new Matrix4f()).mul(base);
-
-        float near = getRenderDistance()<=32.0f?8f:16f;
-        near = VoxyClient.disableSodiumChunkRender()?0.1f:near;
-
-        float far = 16*3000;
-
-        /* jank way of just modifying the base raw
-        if (true) {
-            return new Matrix4f(base)
-                    .m22((far + near) / (near - far))
-                    .m32((far+far) * near / (near - far));
-        }*/
-
-        //Flip near and far on reverse depth
-        if (properties.isReverseZ()) {
-            float tmp = near;
-            near = far;
-            far = tmp;
-        }
-
-        return extraProjection.mulLocal(
-                new Matrix4f(rawMCProj)
-                .m22((properties.isZero2One()?far:(far+near)) / (near - far))
-                .m32((properties.isZero2One()?far:(far+far)) * near / (near - far))
-        );
+        return new Matrix4f(base);
     }
 
     private boolean frexStillHasWork() {
@@ -500,9 +467,6 @@ public class VoxyRenderSystem {
     }
 
     public Viewport<?> getViewport() {
-        if (IrisUtil.irisShadowActive()) {
-            return null;
-        }
         return this.viewportSelector.getViewport();
     }
 

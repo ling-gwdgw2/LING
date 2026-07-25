@@ -1,7 +1,6 @@
 package me.cortex.voxy.client.core.model;
 
-import org.embeddedt.embeddium.client.util.color.ColorSRGB;
-import net.minecraft.util.ARGB;
+// removed imports
 
 import java.util.Arrays;
 
@@ -243,6 +242,20 @@ public class TextureUtils {
     }
 
 
+    private static float srgbToLinear(int color) {
+        float f = (float)color / 255.0F;
+        return f <= 0.04045F ? f / 12.92F : (float)Math.pow((double)((f + 0.055F) / 1.055F), 2.4);
+    }
+
+    private static int linearToSrgbChannel(float f) {
+        float g = f <= 0.0031308F ? f * 12.92F : 1.055F * (float)Math.pow((double)f, 0.4166666666666667) - 0.055F;
+        return Math.round(g * 255.0F);
+    }
+
+    private static int linearToSrgb(float r, float g, float b, int a) {
+        return (a << 24) | (linearToSrgbChannel(r) << 16) | (linearToSrgbChannel(g) << 8) | linearToSrgbChannel(b);
+    }
+
     public static int mipColours(boolean darkend, int C00, int C01, int C10, int C11) {
         darkend = !darkend;//Invert to make it easier
         float r = 0.0f;
@@ -250,35 +263,35 @@ public class TextureUtils {
         float b = 0.0f;
         float a = 0.0f;
         if (darkend || (C00 >>> 24) != 0) {
-            r += ColorSRGB.srgbToLinear((C00 >> 0) & 0xFF);
-            g += ColorSRGB.srgbToLinear((C00 >> 8) & 0xFF);
-            b += ColorSRGB.srgbToLinear((C00 >> 16) & 0xFF);
-            a += darkend ? (C00 >>> 24) : ColorSRGB.srgbToLinear(C00 >>> 24);
+            r += srgbToLinear((C00 >> 0) & 0xFF);
+            g += srgbToLinear((C00 >> 8) & 0xFF);
+            b += srgbToLinear((C00 >> 16) & 0xFF);
+            a += darkend ? (C00 >>> 24) : srgbToLinear(C00 >>> 24);
         }
         if (darkend || (C01 >>> 24) != 0) {
-            r += ColorSRGB.srgbToLinear((C01 >> 0) & 0xFF);
-            g += ColorSRGB.srgbToLinear((C01 >> 8) & 0xFF);
-            b += ColorSRGB.srgbToLinear((C01 >> 16) & 0xFF);
-            a += darkend ? (C01 >>> 24) : ColorSRGB.srgbToLinear(C01 >>> 24);
+            r += srgbToLinear((C01 >> 0) & 0xFF);
+            g += srgbToLinear((C01 >> 8) & 0xFF);
+            b += srgbToLinear((C01 >> 16) & 0xFF);
+            a += darkend ? (C01 >>> 24) : srgbToLinear(C01 >>> 24);
         }
         if (darkend || (C10 >>> 24) != 0) {
-            r += ColorSRGB.srgbToLinear((C10 >> 0) & 0xFF);
-            g += ColorSRGB.srgbToLinear((C10 >> 8) & 0xFF);
-            b += ColorSRGB.srgbToLinear((C10 >> 16) & 0xFF);
-            a += darkend ? (C10 >>> 24) : ColorSRGB.srgbToLinear(C10 >>> 24);
+            r += srgbToLinear((C10 >> 0) & 0xFF);
+            g += srgbToLinear((C10 >> 8) & 0xFF);
+            b += srgbToLinear((C10 >> 16) & 0xFF);
+            a += darkend ? (C10 >>> 24) : srgbToLinear(C10 >>> 24);
         }
         if (darkend || (C11 >>> 24) != 0) {
-            r += ColorSRGB.srgbToLinear((C11 >> 0) & 0xFF);
-            g += ColorSRGB.srgbToLinear((C11 >> 8) & 0xFF);
-            b += ColorSRGB.srgbToLinear((C11 >> 16) & 0xFF);
-            a += darkend ? (C11 >>> 24) : ColorSRGB.srgbToLinear(C11 >>> 24);
+            r += srgbToLinear((C11 >> 0) & 0xFF);
+            g += srgbToLinear((C11 >> 8) & 0xFF);
+            b += srgbToLinear((C11 >> 16) & 0xFF);
+            a += darkend ? (C11 >>> 24) : srgbToLinear(C11 >>> 24);
         }
 
-        return ColorSRGB.linearToSrgb(
+        return linearToSrgb(
                 r / 4,
                 g / 4,
                 b / 4,
-                darkend ? ((int) a) / 4 : ARGB.linearToSrgbChannel(a / 4)
+                darkend ? ((int) a) / 4 : linearToSrgbChannel(a / 4)
         );
     }
 

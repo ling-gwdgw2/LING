@@ -1,13 +1,7 @@
 package me.cortex.voxy.client.core;
 
-import com.mojang.blaze3d.pipeline.DepthStencilState;
-import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.cortex.voxy.client.core.gl.shader.Shader;
-import me.cortex.voxy.client.core.util.IrisUtil;
-import me.cortex.voxy.client.iris.IGetIrisVoxyPipelineData;
-import net.coderbot.iris.Iris;
-
 import static org.lwjgl.opengl.GL11C.*;
 
 public record RenderProperties(boolean isZero2One, boolean isReverseZ, boolean useBlockAtlasUVs) {
@@ -43,35 +37,15 @@ public record RenderProperties(boolean isZero2One, boolean isReverseZ, boolean u
 
 
 
-    private static boolean irisUseBlockAtlasUv() {
-        var irisPipe = Iris.getPipelineManager().getPipelineNullable();
-        if (irisPipe == null) {
-            return false;
-        }
-        if (irisPipe instanceof IGetIrisVoxyPipelineData getVoxyPipeData) {
-            var pipeData = getVoxyPipeData.voxy$getPipelineData();
-            if (pipeData == null) {
-                return false;
-            }
-            //return pipeData.useBlockAtlasUV;
-            return false;
-        }
-        return false;
-    }
-
     private static boolean useReverseZ() {
-        return IrisUtil.irisShaderPackEnabled()?false:DepthStencilState.DEFAULT.depthTest().equals(CompareOp.GREATER_THAN_OR_EQUAL);
+        return false;
     }
 
     public static RenderProperties getRenderProperties() {
         RenderProperties properties = new RenderProperties(
-                RenderSystem.getDevice().getDeviceInfo().isZZeroToOne(),
+                true,
                 useReverseZ(),
                 false);
-
-        if (IrisUtil.IRIS_INSTALLED && IrisUtil.SHADER_SUPPORT) {
-            properties = new RenderProperties(properties.isZero2One(), properties.isReverseZ(), irisUseBlockAtlasUv());
-        }
 
         return properties;
     }

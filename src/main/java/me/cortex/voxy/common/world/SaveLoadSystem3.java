@@ -8,6 +8,22 @@ import me.cortex.voxy.common.world.other.Mapper;
 import org.lwjgl.system.MemoryUtil;
 
 public class SaveLoadSystem3 {
+    private static int expand(int v) {
+        v = (v | (v << 16)) & 0x030000FF;
+        v = (v | (v <<  8)) & 0x0300F00F;
+        v = (v | (v <<  4)) & 0x030C30C3;
+        v = (v | (v <<  2)) & 0x09249249;
+        return v;
+    }
+    private static int compress(int v) {
+        v &= 0x09249249;
+        v = (v ^ (v >>  2)) & 0x030c30c3;
+        v = (v ^ (v >>  4)) & 0x0300f00f;
+        v = (v ^ (v >>  8)) & 0xff0000ff;
+        v = (v ^ (v >> 16)) & 0x0000ffff;
+        return v;
+    }
+
     public static final int STORAGE_VERSION = 0;
 
     private record SerializationCache(Long2ShortOpenHashMap lutMapCache, MemoryBuffer memoryBuffer) {
@@ -20,15 +36,15 @@ public class SaveLoadSystem3 {
         int x = i&0x1F;
         int y = (i>>10)&0x1F;
         int z = (i>>5)&0x1F;
-        return Integer.expand(x,0b1001001001001)|Integer.expand(y,0b10010010010010)|Integer.expand(z,0b100100100100100);
+        return expand(x) | (expand(y) << 1) | (expand(z) << 2);
 
         //zyxzyxzyxzyxzyx
     }
 
     public static int z2lin(int i) {
-        int x = Integer.compress(i, 0b1001001001001);
-        int y = Integer.compress(i, 0b10010010010010);
-        int z = Integer.compress(i, 0b100100100100100);
+        int x = compress(i);
+        int y = compress(i >> 1);
+        int z = compress(i >> 2);
         return x|(y<<10)|(z<<5);
     }
 

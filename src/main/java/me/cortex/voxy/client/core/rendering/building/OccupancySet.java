@@ -12,9 +12,25 @@ import java.util.Random;
 public class OccupancySet {
     private long topLvl;//4x4x4
     private final long[] bottomLvl = new long[(4*4*4)*8];
+
+    private static int compressTop(int pos) {
+        int out = 0;
+        out |= (pos >> 3) & 0b11;
+        out |= ((pos >> 8) & 0b11) << 2;
+        out |= ((pos >> 13) & 0b11) << 4;
+        return out;
+    }
+    
+    private static int compressBot(int pos) {
+        int out = 0;
+        out |= pos & 0b111;
+        out |= ((pos >> 5) & 0b111) << 3;
+        out |= ((pos >> 10) & 0b111) << 6;
+        return out;
+    }
     public void set(final int pos) {
-        final long topBit = 1L<<Integer.compress(pos, 0b11000_11000_11000);
-        final int  botIdx =     Integer.compress(pos, 0b00111_00111_00111);
+        final long topBit = 1L<<compressTop(pos);
+        final int  botIdx = compressBot(pos);
 
         int baseBotIdx = Long.bitCount(this.topLvl&(topBit-1))*8;
         if ((this.topLvl & topBit) == 0) {
@@ -38,8 +54,8 @@ public class OccupancySet {
     }
 
     private boolean get(int pos) {
-        final long topBit = 1L<<Integer.compress(pos, 0b11000_11000_11000);
-        final int  botIdx =     Integer.compress(pos, 0b00111_00111_00111);
+        final long topBit = 1L<<compressTop(pos);
+        final int  botIdx = compressBot(pos);
         if ((this.topLvl & topBit) == 0) {
             return false;
         }

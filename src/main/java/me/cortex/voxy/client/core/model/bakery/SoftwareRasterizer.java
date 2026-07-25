@@ -1,6 +1,6 @@
 package me.cortex.voxy.client.core.model.bakery;
 
-import org.embeddedt.embeddium.api.util.ColorMixer;
+// import org.embeddedt.embeddium.api.util.ColorMixer;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
@@ -9,6 +9,25 @@ import org.joml.Vector4f;
 import java.util.Arrays;
 
 public class SoftwareRasterizer {
+    private static int mixColor(int dst, int src, int alpha) {
+        int dstR = (dst) & 0xFF;
+        int dstG = (dst >> 8) & 0xFF;
+        int dstB = (dst >> 16) & 0xFF;
+        int dstA = (dst >> 24) & 0xFF;
+        
+        int srcR = (src) & 0xFF;
+        int srcG = (src >> 8) & 0xFF;
+        int srcB = (src >> 16) & 0xFF;
+        int srcA = (src >> 24) & 0xFF;
+        
+        int outR = (srcR * alpha + dstR * (255 - alpha)) / 255;
+        int outG = (srcG * alpha + dstG * (255 - alpha)) / 255;
+        int outB = (srcB * alpha + dstB * (255 - alpha)) / 255;
+        int outA = Math.max(dstA, alpha);
+        
+        return (outR) | (outG << 8) | (outB << 16) | (outA << 24);
+    }
+
     private static final int INTEGER_BITS = 9;//+-512
     private static final int TOTAL_INTEGER_BITS = INTEGER_BITS+1;
     private static final int FIXED_POINT_BITS = 32-TOTAL_INTEGER_BITS;
@@ -74,8 +93,8 @@ public class SoftwareRasterizer {
     }
 
     private int sampleTexture(float u, float v) {
-        int pu = Math.clamp(Math.round(u*this.samplerWidth-0.5f), 0, this.samplerWidth-1);
-        int pv = Math.clamp(Math.round(v*this.samplerHeight-0.5f), 0, this.samplerHeight-1);
+        int pu = Math.max(0, Math.min(this.samplerWidth-1, Math.round(u*this.samplerWidth-0.5f)));
+        int pv = Math.max(0, Math.min(this.samplerHeight-1, Math.round(v*this.samplerHeight-0.5f)));
         return this.samplerTexture[this.samplerWidth*pv+pu];
     }
 
@@ -235,7 +254,7 @@ public class SoftwareRasterizer {
         int blendAlpha = Math.min(0xFF,srcAlpha+((dstAlpha*(255-srcAlpha))>>8));
         //how much did we actually get
 
-        int blend = ColorMixer.mix(dst, scr, dstAlpha);//addRGB(ColorABGR.mulRGB(scr, 255-dstAlpha),ColorABGR.mulRGB(dst, dstAlpha));
+        int blend = mixColor(dst, scr, dstAlpha);//addRGB(ColorABGR.mulRGB(scr, 255-dstAlpha),ColorABGR.mulRGB(dst, dstAlpha));
         return blend|(blendAlpha<<24);
     }
 

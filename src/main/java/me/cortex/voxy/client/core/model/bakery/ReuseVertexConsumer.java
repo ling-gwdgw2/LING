@@ -4,9 +4,7 @@ package me.cortex.voxy.client.core.model.bakery;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.cortex.voxy.common.util.MemoryBuffer;
 import net.minecraft.client.model.geom.builders.UVPair;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
-import net.minecraft.client.renderer.texture.MipmapStrategy;
-import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import org.lwjgl.system.MemoryUtil;
 
 public final class ReuseVertexConsumer implements VertexConsumer {
@@ -39,13 +37,13 @@ public final class ReuseVertexConsumer implements VertexConsumer {
     }
 
     @Override
-    public ReuseVertexConsumer addVertex(float x, float y, float z) {
+    public VertexConsumer vertex(double x, double y, double z) {
         this.ensureCanPut();
         this.ptr += VERTEX_FORMAT_SIZE; this.count++; //Goto next vertex
         this.meta(this.defaultMeta|this.globalOrMetadata);
-        MemoryUtil.memPutFloat(this.ptr, x);
-        MemoryUtil.memPutFloat(this.ptr + 4, y);
-        MemoryUtil.memPutFloat(this.ptr + 8, z);
+        MemoryUtil.memPutFloat(this.ptr, (float)x);
+        MemoryUtil.memPutFloat(this.ptr + 4, (float)y);
+        MemoryUtil.memPutFloat(this.ptr + 8, (float)z);
         return this;
     }
 
@@ -56,38 +54,36 @@ public final class ReuseVertexConsumer implements VertexConsumer {
     }
 
     @Override
-    public ReuseVertexConsumer setColor(int red, int green, int blue, int alpha) {
+    public VertexConsumer color(int red, int green, int blue, int alpha) {
+        return this;
+    }
+
+    public VertexConsumer color(int i) {
         return this;
     }
 
     @Override
-    public VertexConsumer setColor(int i) {
-        return this;
-    }
-
-    @Override
-    public ReuseVertexConsumer setUv(float u, float v) {
+    public VertexConsumer uv(float u, float v) {
         MemoryUtil.memPutFloat(this.ptr + 16, u);
         MemoryUtil.memPutFloat(this.ptr + 20, v);
         return this;
     }
 
     @Override
-    public ReuseVertexConsumer setUv1(int u, int v) {
+    public VertexConsumer overlayCoords(int u, int v) {
         return this;
     }
 
     @Override
-    public ReuseVertexConsumer setUv2(int u, int v) {
+    public VertexConsumer uv2(int u, int v) {
         return this;
     }
 
     @Override
-    public ReuseVertexConsumer setNormal(float x, float y, float z) {
+    public VertexConsumer normal(float x, float y, float z) {
         return this;
     }
 
-    @Override
     public VertexConsumer setLineWidth(float f) {
         return null;
     }
@@ -98,20 +94,27 @@ public final class ReuseVertexConsumer implements VertexConsumer {
 
     public ReuseVertexConsumer quad(BakedQuad quad, boolean forceSolid) {
         int meta = 0;
-        meta |= forceSolid?0:(quad.materialInfo().layer()!=ChunkSectionLayer.SOLID?1:0);//has discard
-        meta |= quad.materialInfo().isTinted()?4:0;//has tinting
+        // In vanilla, we don't know if the quad itself is solid vs cutout, the render type is per-block.
+        // We'll just assume not discard unless specified elsewhere, or just pass 0.
+        meta |= forceSolid?0:0;
+        meta |= quad.isTinted()?4:0;//has tinting
         return this.quad(quad, meta);
     }
 
     public ReuseVertexConsumer quad(BakedQuad quad, int metadata) {
-        this.anyShaded |= quad.materialInfo().shade();
-        this.anyDarkendTex |= quad.materialInfo().sprite().contents().mipmapStrategy == MipmapStrategy.DARK_CUTOUT;
+        this.anyShaded |= quad.isShade();
+        this.anyDarkendTex |= false; // MipmapStrategy missing in vanilla
         this.ensureCanPut();
+        int[] data = quad.getVertices();
         for (int i = 0; i < 4; i++) {
-            var pos = quad.position(i);
-            this.addVertex(pos.x(), pos.y(), pos.z());
-            long puv = quad.packedUV(i);
-            this.setUv(UVPair.unpackU(puv),UVPair.unpackV(puv));
+            float x = Float.intBitsToFloat(data[i * 8 + 0]);
+            float y = Float.intBitsToFloat(data[i * 8 + 1]);
+            float z = Float.intBitsToFloat(data[i * 8 + 2]);
+            this.vertex(x, y, z);
+            
+            float u = Float.intBitsToFloat(data[i * 8 + 4]);
+            float v = Float.intBitsToFloat(data[i * 8 + 5]);
+            this.uv(u, v);
 
             this.meta(metadata|this.globalOrMetadata);
         }
@@ -160,4 +163,11 @@ public final class ReuseVertexConsumer implements VertexConsumer {
     public long getAddress() {
         return this.buffer.address;
     }
+
+    @Override
+    public void endVertex() {}
+    @Override
+    public void defaultColor(int r, int g, int b, int a) {}
+    @Override
+    public void unsetDefaultColor() {}
 }

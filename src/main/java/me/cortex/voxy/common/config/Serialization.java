@@ -6,7 +6,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import me.cortex.voxy.common.Logger;
 import me.cortex.voxy.commonImpl.VoxyCommon;
-import net.fabricmc.loader.api.FabricLoader;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Serialization {
-    public static final Set<Class<?>> CONFIG_TYPES = new HashSet<>();
+    public static final Set<Class<?>> CONFIG_TYPES = new java.util.HashSet<>();
+    public static final Path CONFIG_PATH = net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get().resolve("voxy");
     public static Gson GSON;
 
     private static final class GsonConfigSerialization <T> implements TypeAdapterFactory {
@@ -96,7 +97,7 @@ public class Serialization {
         Map<Class<?>, GsonConfigSerialization<?>> serializers = new HashMap<>();
 
         Set<String> clazzs = new LinkedHashSet<>();
-        var path = FabricLoader.getInstance().getModContainer("voxy").get().getRootPaths().get(0);
+        var path = FMLPaths.CONFIGDIR.get().resolve("voxy");
         clazzs.addAll(collectAllClasses(path, BASE_SEARCH_PACKAGE));
         clazzs.addAll(collectAllClasses(BASE_SEARCH_PACKAGE));
         int count = 0;

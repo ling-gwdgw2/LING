@@ -23,7 +23,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.*;
-import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.storage.RegionFileVersion;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -49,7 +49,7 @@ public class WorldImporter implements IDataImporter {
     private final WorldEngine world;
     private final PalettedContainerRO<Holder<Biome>> defaultBiomeProvider;
     private final Codec<PalettedContainerRO<Holder<Biome>>> biomeCodec;
-    private final Codec<PalettedContainer<BlockState>> blockStateCodec;
+    private final Codec<PalettedContainerRO<BlockState>> blockStateCodec;
     private final AtomicInteger estimatedTotalChunks = new AtomicInteger();//Slowly converges to the true value
     private final AtomicInteger totalChunks = new AtomicInteger();
     private final AtomicInteger chunksProcessed = new AtomicInteger();
@@ -63,8 +63,8 @@ public class WorldImporter implements IDataImporter {
         this.world = worldEngine;
         this.service = sm.createService(()->new Pair<>(()->this.jobQueue.poll().run(), ()->{}), 3, "World importer", runChecker);
 
-        var biomeRegistry = mcWorld.registryAccess().lookupOrThrow(Registries.BIOME);
-        var defaultBiome = biomeRegistry.getOrThrow(Biomes.PLAINS);
+        var biomeRegistry = mcWorld.registryAccess().registryOrThrow(Registries.BIOME);
+        net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> defaultBiome = biomeRegistry.getHolderOrThrow(Biomes.PLAINS);
         this.defaultBiomeProvider = new PalettedContainerRO<>() {
             @Override
             public Holder<Biome> get(int x, int y, int z) {
@@ -86,30 +86,27 @@ public class WorldImporter implements IDataImporter {
                 return 0;
             }
 
-            @Override
+            /* @Override
             public int bitsPerEntry() {
                 return 0;
-            }
+            } */
 
             @Override
             public boolean maybeHas(Predicate<Holder<Biome>> predicate) {
                 return predicate.test(defaultBiome);
             }
 
-            @Override
-            public void forEachInPalette(Consumer<Holder<Biome>> consumer) {
-                consumer.accept(defaultBiome);
-            }
+            
 
             @Override
             public void count(PalettedContainer.CountConsumer<Holder<Biome>> counter) {
                 counter.accept(defaultBiome, 1);
             }
 
-            @Override
+            /* @Override
             public PalettedContainer<Holder<Biome>> copy() {
                 return null;
-            }
+            } */
 
             @Override
             public PalettedContainer<Holder<Biome>> recreate() {
@@ -117,14 +114,14 @@ public class WorldImporter implements IDataImporter {
             }
 
             @Override
-            public PackedData<Holder<Biome>> pack(Strategy<Holder<Biome>> provider) {
+            public PackedData<Holder<Biome>> pack(net.minecraft.core.IdMap<Holder<Biome>> idMap, net.minecraft.world.level.chunk.PalettedContainer.Strategy strategy) {
                 return null;
             }
         };
 
-        var factory = PalettedContainerFactory.create(mcWorld.registryAccess());
-        this.biomeCodec = factory.biomeContainerCodec();
-        this.blockStateCodec = factory.blockStatesContainerCodec();
+        
+        this.biomeCodec = net.minecraft.world.level.chunk.PalettedContainer.codecRO(mcWorld.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.BIOME).asHolderIdMap(), mcWorld.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.BIOME).holderByNameCodec(), net.minecraft.world.level.chunk.PalettedContainer.Strategy.SECTION_BIOMES, mcWorld.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.BIOME).getHolderOrThrow(net.minecraft.world.level.biome.Biomes.PLAINS));
+        this.blockStateCodec = net.minecraft.world.level.chunk.PalettedContainer.codecRO(net.minecraft.world.level.block.Block.BLOCK_STATE_REGISTRY, net.minecraft.world.level.block.state.BlockState.CODEC, net.minecraft.world.level.chunk.PalettedContainer.Strategy.SECTION_STATES, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
     }
 
 
@@ -198,7 +195,7 @@ public class WorldImporter implements IDataImporter {
     public void importZippedRegionDirectoryAsync(File zip, String innerDirectory) {
         try {
             innerDirectory = innerDirectory.replace("\\\\", "\\").replace("\\", "/");
-            var file = ZipFile.builder().setFile(zip).get();
+            var file = new org.apache.commons.compress.archivers.zip.ZipFile(zip);
             ArrayList<ZipArchiveEntry> regions = new ArrayList<>();
             for (var e = file.getEntries(); e.hasMoreElements();) {
                 var entry = e.nextElement();
@@ -448,22 +445,22 @@ public class WorldImporter implements IDataImporter {
         }
 
         //Dont process non full chunk sections
-        var status = ChunkStatus.byName(chunk.getStringOr("Status", null));
+        var status = ChunkStatus.byName(chunk.getString("Status"));
         if (status != ChunkStatus.FULL && status != ChunkStatus.EMPTY) {//We also import empty since they are from data upgrade
             this.totalChunks.decrementAndGet();
             return;
         }
 
         try {
-            int x = chunk.getIntOr("xPos", Integer.MIN_VALUE);
-            int z = chunk.getIntOr("zPos", Integer.MIN_VALUE);
+            int x = (chunk.contains("xPos", 99) ? chunk.getInt("xPos") : Integer.MIN_VALUE);
+            int z = (chunk.contains("zPos", 99) ? chunk.getInt("zPos") : Integer.MIN_VALUE);
             if (x>>5 != regionX || z>>5 != regionZ) {
                 Logger.error("Chunk position is not located in correct region, expected: (" + regionX + ", " + regionZ+"), got: " + "(" + (x>>5) + ", " + (z>>5)+"), importing anyway");
             }
 
-            for (var sectionE : chunk.getList("sections").orElseThrow()) {
+            for (var sectionE : chunk.getList("sections", 10)) {
                 var section = (CompoundTag) sectionE;
-                int y = section.getIntOr("Y", Integer.MIN_VALUE);
+                int y = (section.contains("Y", 99) ? section.getInt("Y") : Integer.MIN_VALUE);
                 this.importSectionNBT(x, y, z, section);
             }
         } catch (Exception e) {
@@ -480,8 +477,8 @@ public class WorldImporter implements IDataImporter {
             return;
         }
 
-        byte[] blockLightData = section.getByteArray("BlockLight").orElse(EMPTY);
-        byte[] skyLightData = section.getByteArray("SkyLight").orElse(EMPTY);
+        byte[] blockLightData = section.getByteArray("BlockLight");
+        byte[] skyLightData = section.getByteArray("SkyLight");
 
         DataLayer blockLight;
         if (blockLightData.length != 0) {
@@ -497,16 +494,16 @@ public class WorldImporter implements IDataImporter {
             skyLight = null;
         }
 
-        var blockStatesRes = blockStateCodec.parse(NbtOps.INSTANCE, section.getCompound("block_states").get());
-        if (!blockStatesRes.hasResultOrPartial()) {
+        var blockStatesRes = blockStateCodec.parse(NbtOps.INSTANCE, section.getCompound("block_states"));
+        if (!blockStatesRes.resultOrPartial(me.cortex.voxy.common.Logger::error).isPresent()) {
             //TODO: if its only partial, it means should try to upgrade the nbt format with datafixerupper probably
             return;
         }
-        var blockStates = blockStatesRes.getPartialOrThrow();
+        var blockStates = (net.minecraft.world.level.chunk.PalettedContainer<net.minecraft.world.level.block.state.BlockState>) blockStatesRes.resultOrPartial(me.cortex.voxy.common.Logger::error).get();
         var biomes = this.defaultBiomeProvider;
         var optBiomes = section.getCompound("biomes");
-        if (optBiomes.isPresent()) {
-            biomes = this.biomeCodec.parse(NbtOps.INSTANCE, optBiomes.get()).result().orElse(this.defaultBiomeProvider);
+        if (section.contains("biomes")) {
+            biomes = this.biomeCodec.parse(net.minecraft.nbt.NbtOps.INSTANCE, optBiomes).result().orElse(this.defaultBiomeProvider);
         }
         VoxelizedSection csec = WorldConversionFactory.convert(
                 SECTION_CACHE.get().setPosition(x, y, z),

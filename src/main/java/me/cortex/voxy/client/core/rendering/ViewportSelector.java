@@ -1,17 +1,12 @@
 package me.cortex.voxy.client.core.rendering;
 
-import me.cortex.voxy.client.core.util.IrisUtil;
-import net.fabricmc.loader.api.FabricLoader;
-import org.vivecraft.api.client.VRRenderingAPI;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static org.vivecraft.api.client.data.RenderPass.VANILLA;
 
 public class ViewportSelector <T extends Viewport<?>> {
-    public static final boolean VIVECRAFT_INSTALLED = FabricLoader.getInstance().isModLoaded("vivecraft");
+    public static final boolean VIVECRAFT_INSTALLED = false; // FabricLoader.getInstance().isModLoaded("vivecraft");
 
     private final Supplier<T> creator;
     private final T defaultViewport;
@@ -27,11 +22,7 @@ public class ViewportSelector <T extends Viewport<?>> {
     }
 
     private T getVivecraftViewport() {
-        var pass = VRRenderingAPI.instance().getCurrentRenderPass();
-        if (pass == null || pass == VANILLA) {
-            return null;
-        }
-        return this.getOrCreate(pass);
+        return null;
     }
 
     private static final Object IRIS_SHADOW_OBJECT = new Object();
@@ -39,10 +30,6 @@ public class ViewportSelector <T extends Viewport<?>> {
         T viewport = null;
         if (viewport == null && VIVECRAFT_INSTALLED) {
             viewport = getVivecraftViewport();
-        }
-
-        if (viewport == null && IrisUtil.irisShadowActive()) {
-            viewport = this.getOrCreate(IRIS_SHADOW_OBJECT);
         }
 
         if (viewport == null) {

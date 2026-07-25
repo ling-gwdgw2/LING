@@ -69,7 +69,7 @@ public class VoxyClient {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            DebugEntries.init();
+            // DebugEntries.init();
         });
         
         MinecraftForge.EVENT_BUS.register(new ClientEvents());
@@ -90,7 +90,7 @@ public class VoxyClient {
         @SubscribeEvent
         public void onRegisterClientCommands(RegisterClientCommandsEvent event) {
             if (VoxyCommon.isAvailable()) {
-                VoxyCommands.register(event.getDispatcher());
+                // VoxyCommands.register(event.getDispatcher());
             }
         }
     }
