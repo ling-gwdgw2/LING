@@ -2,13 +2,13 @@ package me.cortex.voxy.client.core.util;
 
 import me.cortex.voxy.client.core.VoxyRenderSystem;
 import me.cortex.voxy.client.core.rendering.Viewport;
-import net.caffeinemc.mods.sodium.client.render.chunk.ChunkRenderMatrices;
-import net.caffeinemc.mods.sodium.client.util.FogParameters;
+import org.embeddedt.embeddium.client.render.chunk.ChunkRenderMatrices;
+import org.embeddedt.embeddium.client.util.FogParameters;
 import net.fabricmc.loader.api.FabricLoader;
-import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.api.v0.IrisApi;
-import net.irisshaders.iris.gl.IrisRenderSystem;
-import net.irisshaders.iris.shadows.ShadowRenderer;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.api.v0.IrisApi;
+import net.coderbot.iris.gl.IrisRenderSystem;
+import net.coderbot.iris.shadows.ShadowRenderer;
 
 import java.io.IOException;
 

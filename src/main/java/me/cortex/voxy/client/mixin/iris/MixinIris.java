@@ -2,10 +2,10 @@ package me.cortex.voxy.client.mixin.iris;
 
 import me.cortex.voxy.client.iris.ShaderLoadError;
 import me.cortex.voxy.common.Logger;
-import net.irisshaders.iris.Iris;
-import net.irisshaders.iris.shaderpack.ShaderPack;
-import net.irisshaders.iris.shaderpack.materialmap.NamespacedId;
-import net.irisshaders.iris.shaderpack.programs.ProgramSet;
+import net.coderbot.iris.Iris;
+import net.coderbot.iris.shaderpack.ShaderPack;
+import net.coderbot.iris.shaderpack.materialmap.NamespacedId;
+import net.coderbot.iris.shaderpack.programs.ProgramSet;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;

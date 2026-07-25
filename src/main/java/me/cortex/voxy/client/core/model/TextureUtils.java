@@ -1,6 +1,6 @@
 package me.cortex.voxy.client.core.model;
 
-import net.caffeinemc.mods.sodium.client.util.color.ColorSRGB;
+import org.embeddedt.embeddium.client.util.color.ColorSRGB;
 import net.minecraft.util.ARGB;
 
 import java.util.Arrays;

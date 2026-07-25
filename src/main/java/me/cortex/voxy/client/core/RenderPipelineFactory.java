@@ -6,7 +6,7 @@ import me.cortex.voxy.client.core.rendering.hierachical.NodeCleaner;
 import me.cortex.voxy.client.core.util.IrisUtil;
 import me.cortex.voxy.client.iris.IGetIrisVoxyPipelineData;
 import me.cortex.voxy.common.Logger;
-import net.irisshaders.iris.Iris;
+import net.coderbot.iris.Iris;
 
 import java.util.function.BooleanSupplier;
 

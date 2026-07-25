@@ -3,9 +3,9 @@ package me.cortex.voxy.client.config;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.cortex.voxy.commonImpl.VoxyCommon;
-import net.caffeinemc.mods.sodium.client.config.ConfigManager;
-import net.caffeinemc.mods.sodium.client.config.structure.OptionPage;
-import net.caffeinemc.mods.sodium.client.gui.VideoSettingsScreen;
+import org.embeddedt.embeddium.client.config.ConfigManager;
+import org.embeddedt.embeddium.client.config.structure.OptionPage;
+import org.embeddedt.embeddium.client.gui.VideoSettingsScreen;
 
 public class ModMenuIntegration implements ModMenuApi {
     @Override

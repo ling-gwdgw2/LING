@@ -1,6 +1,6 @@
 package me.cortex.voxy.client.core.model.bakery;
 
-import net.caffeinemc.mods.sodium.api.util.ColorMixer;
+import org.embeddedt.embeddium.api.util.ColorMixer;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3i;

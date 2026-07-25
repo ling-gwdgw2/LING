@@ -1,9 +1,9 @@
 package me.cortex.voxy.client.config;
 
-import net.caffeinemc.mods.sodium.api.config.ConfigState;
-import net.caffeinemc.mods.sodium.api.config.StorageEventHandler;
-import net.caffeinemc.mods.sodium.api.config.option.*;
-import net.caffeinemc.mods.sodium.api.config.structure.*;
+import org.embeddedt.embeddium.api.config.ConfigState;
+import org.embeddedt.embeddium.api.config.StorageEventHandler;
+import org.embeddedt.embeddium.api.config.option.*;
+import org.embeddedt.embeddium.api.config.structure.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.Identifier;

@@ -6,7 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import me.cortex.voxy.client.core.gl.shader.Shader;
 import me.cortex.voxy.client.core.util.IrisUtil;
 import me.cortex.voxy.client.iris.IGetIrisVoxyPipelineData;
-import net.irisshaders.iris.Iris;
+import net.coderbot.iris.Iris;
 
 import static org.lwjgl.opengl.GL11C.*;
 

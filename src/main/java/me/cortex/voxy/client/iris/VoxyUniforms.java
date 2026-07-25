@@ -2,13 +2,13 @@ package me.cortex.voxy.client.iris;
 
 import me.cortex.voxy.client.config.VoxyConfig;
 import me.cortex.voxy.client.core.IVoxyRenderSystemHolder;
-import net.irisshaders.iris.gl.uniform.UniformHolder;
+import net.coderbot.iris.gl.uniform.UniformHolder;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
 import java.util.function.Supplier;
 
-import static net.irisshaders.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
+import static net.coderbot.iris.gl.uniform.UniformUpdateFrequency.PER_FRAME;
 
 public class VoxyUniforms {
     //TODO: fix this so that it directly capturesthe render system? (or atleast the holder?)

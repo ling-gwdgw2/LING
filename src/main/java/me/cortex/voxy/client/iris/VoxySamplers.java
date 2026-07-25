@@ -1,9 +1,9 @@
 package me.cortex.voxy.client.iris;
 
-import net.irisshaders.iris.gl.sampler.GlSampler;
-import net.irisshaders.iris.gl.sampler.SamplerHolder;
-import net.irisshaders.iris.gl.texture.TextureType;
-import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
+import net.coderbot.iris.gl.sampler.GlSampler;
+import net.coderbot.iris.gl.sampler.SamplerHolder;
+import net.coderbot.iris.gl.texture.TextureType;
+import net.coderbot.iris.pipeline.IrisRenderingPipeline;
 
 public class VoxySamplers {
     public static void addSamplers(IrisRenderingPipeline pipeline, SamplerHolder samplers) {

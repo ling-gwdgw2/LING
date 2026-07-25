@@ -2,11 +2,11 @@ package me.cortex.voxy.client.mixin.iris;
 
 import com.google.common.collect.ImmutableSet;
 import me.cortex.voxy.client.iris.VoxySamplers;
-import net.irisshaders.iris.gl.sampler.SamplerHolder;
-import net.irisshaders.iris.pipeline.IrisRenderingPipeline;
-import net.irisshaders.iris.pipeline.WorldRenderingPipeline;
-import net.irisshaders.iris.samplers.IrisSamplers;
-import net.irisshaders.iris.targets.RenderTargets;
+import net.coderbot.iris.gl.sampler.SamplerHolder;
+import net.coderbot.iris.pipeline.IrisRenderingPipeline;
+import net.coderbot.iris.pipeline.WorldRenderingPipeline;
+import net.coderbot.iris.samplers.IrisSamplers;
+import net.coderbot.iris.targets.RenderTargets;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

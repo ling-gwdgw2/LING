@@ -4,9 +4,12 @@ import me.cortex.voxy.client.core.gl.Capabilities;
 import me.cortex.voxy.client.core.rendering.util.SharedIndexBuffer;
 import me.cortex.voxy.common.Logger;
 import me.cortex.voxy.commonImpl.VoxyCommon;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.loader.api.FabricLoader;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraft.client.Minecraft;
 
 import java.io.FileOutputStream;
@@ -17,7 +20,8 @@ import java.util.HashSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class VoxyClient implements ClientModInitializer {
+@Mod.EventBusSubscriber(modid = "voxy", bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+public class VoxyClient {
     private static final HashSet<String> FREX = new HashSet<>();
     private static FileLock EXCLUSIVE_LOCK;
     public static void initVoxyClient() {
@@ -62,16 +66,16 @@ public class VoxyClient implements ClientModInitializer {
         }
     }
 
-    @Override
-    public void onInitializeClient() {
-        DebugEntries.init();
-
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
-            if (VoxyCommon.isAvailable()) {
-                dispatcher.register(VoxyCommands.register());
-            }
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            DebugEntries.init();
         });
-
+        
+        MinecraftForge.EVENT_BUS.register(new ClientEvents());
+        
+        // Frex flawless frames is a fabric thing, disabled for Forge
+        /*
         FabricLoader.getInstance()
                 .getEntrypoints("frex_flawless_frames", Consumer.class)
                 .forEach(api -> ((Consumer<Function<String,Consumer<Boolean>>>)api).accept(name->active->{if (active) {
@@ -79,6 +83,16 @@ public class VoxyClient implements ClientModInitializer {
                 } else {
                     FREX.remove(name);
                 }}));
+        */
+    }
+
+    public static class ClientEvents {
+        @SubscribeEvent
+        public void onRegisterClientCommands(RegisterClientCommandsEvent event) {
+            if (VoxyCommon.isAvailable()) {
+                VoxyCommands.register(event.getDispatcher());
+            }
+        }
     }
 
     public static boolean isFrexActive() {
