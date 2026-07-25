@@ -1,1 +1,1 @@
-Voxy is an LoD rendering mod for minecraft
+https://github.com/MCRcortex/voxy.git
